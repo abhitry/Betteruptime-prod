@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: betteruptime
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: aabhii/betteruptime-worker:amd64-latest
+          env:
+            - name: DATABASE_URL
+              value: "postgres://postgres:postgres@postgres:5432/mydb"
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: REGION_ID
+              value: "f5a13f6c-8e91-42b8-9c0e-07b4567a98e0"
+            - name: WORKER_ID
+              value: "1"
+            - name: POSTGRES_HOST
+              value: "postgres"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+      restartPolicy: Always

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pusher
+  namespace: betteruptime
+spec:
+  selector:
+    app: pusher
+  ports:
+    - protocol: TCP
+      port: 3002   # or any port if needed internally
+      targetPort: 3002
+  type: ClusterIP

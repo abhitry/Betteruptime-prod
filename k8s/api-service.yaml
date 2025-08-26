@@ -1,0 +1,30 @@
+#for 2 loadbalancer withou ingress
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   name: api
+#   namespace: betteruptime
+# spec:
+#   selector:
+#     app: api
+#   ports:
+#     - protocol: TCP
+#       port: 3001
+#       targetPort: 3001
+#   type: LoadBalancer   # default, internal only
+
+#for ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: betteruptime
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  type: ClusterIP       # change from LoadBalancer
+  selector:
+    app: api
+  ports:
+  - port: 3001          # service port
+    targetPort: 3001    # container port your API listens on

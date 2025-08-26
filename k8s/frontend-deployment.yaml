@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: betteruptime
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: aabhii/betteruptime-frontend:nginx-ingress
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_BACKEND_URL
+          value: "http://betteruptime.abhishek97.icu/api"   # talk to API service, not localhost
+        - name: PORT
+          value: "3000"
+
+#          value: "http://34.60.134.87:3001"   # talk to API service, not localhost for the wihtout ingress nignix 

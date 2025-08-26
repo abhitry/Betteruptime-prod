@@ -1,0 +1,30 @@
+#for 2 loadbalancer withou ingress
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: frontend
+#   namespace: betteruptime
+# spec:
+#   type: LoadBalancer   # Or use ClusterIP + Ingress
+#   selector:
+#     app: frontend
+#   ports:
+#   - port: 80
+#     targetPort: 3000
+
+
+#for ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: betteruptime
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  type: ClusterIP       # change from LoadBalancer
+  selector:
+    app: frontend
+  ports:
+  - port: 80            # the port exposed by the service
+    targetPort: 3000    # the container port your frontend app listens on
