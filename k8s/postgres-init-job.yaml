@@ -7,15 +7,18 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
-      containers:
-      - name: postgres-init
-        image: aabhii/betteruptime-init:amd64-latest
-        env:
-          - name: DATABASE_URL
-            value: "postgres://postgres:postgres@postgres:5432/mydb"
-        command: ["/app/postgres-init.sh"]
-      # Wait until Postgres pod is ready
       initContainers:
-      - name: wait-for-postgres
-        image: aabhii/betteruptime-init:amd64-latest
-        command: ["/app/wait-for-postgres.sh", "postgres", "5432", "postgres"]
+        - name: wait-for-postgres
+          image: aabhii/betteruptime-init:amd64-latest
+          command: ["/app/wait-for-postgres.sh", "postgres", "5432", "postgres"]
+
+      containers:
+        - name: postgres-init
+          image: aabhii/betteruptime-init:amd64-latest
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: DATABASE_URL
+          command: ["/app/postgres-init.sh"]

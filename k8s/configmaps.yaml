@@ -1,0 +1,49 @@
+# Application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: betteruptime
+data:
+  # API Configuration
+  PORT: "3000"
+  NODE_ENV: "production"
+  
+  # Frontend Configuration
+  NEXT_PUBLIC_BACKEND_URL: "http://betteruptime.abhishek97.icu/api"
+  
+  # Worker Configuration - India Region
+  REGION_ID_USA: "f5a13f6c-8e91-42b8-9c0e-07b4567a98e0"
+  REGION_NAME_USA: "usa"
+  
+  # Worker Configuration - USA Region  
+  REGION_ID_INDIA: "32c9087b-7c53-4d84-8b63-32517cbd17c3"
+  REGION_NAME_INDIA: "india"
+  
+  # Redis Stream Configuration
+  STREAM_NAME: "betteruptime:website"
+  CONSUMER_GROUP_BLOCK_TIME: "5000"
+  CONSUMER_GROUP_COUNT: "10"
+  
+  # Monitoring Configuration
+  HEALTH_CHECK_INTERVAL: "30"
+  REQUEST_TIMEOUT: "25000"
+  RESPONSE_TIMEOUT: "30000"
+
+---
+# Redis configuration for performance tuning
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: betteruptime
+data:
+  redis.conf: |
+    # Redis configuration for better performance with streams
+    maxmemory-policy allkeys-lru
+    save 900 1
+    save 300 10
+    save 60 10000
+    # Stream specific configurations
+    stream-node-max-bytes 4096
+    stream-node-max-entries 100

@@ -1,0 +1,107 @@
+# Worker deployment for India region with HPA support
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-india
+  namespace: betteruptime
+  labels:
+    app: worker-india
+    region: india
+spec:
+  replicas: 1  # HPA will manage this
+  selector:
+    matchLabels:
+      app: worker-india
+      region: india
+  template:
+    metadata:
+      labels:
+        app: worker-india
+        region: india
+    spec:
+      containers:
+        - name: worker-india
+          image: aabhii/betteruptime-worker:v2-svc-api
+          env:
+            # Database configuration from secrets
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: DATABASE_URL
+            - name: POSTGRES_HOST
+              value: "postgres"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_PASSWORD
+            
+            # Redis configuration from secrets
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_URL
+            
+            # Worker specific configuration from configmap
+            - name: REGION_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REGION_ID_INDIA
+            - name: WORKER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name  # Use pod name as worker ID for uniqueness
+            
+            # Performance tuning from configmap
+            - name: REQUEST_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REQUEST_TIMEOUT
+            - name: RESPONSE_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: RESPONSE_TIMEOUT
+          
+          # Resource requests and limits for HPA
+          resources:
+            requests:
+              cpu: 50m      # 0.1 CPU cores
+              memory: 128Mi  # 128 MB RAM
+            limits:
+              cpu: 200m      # 0.5 CPU cores max
+              memory: 256Mi  # 512 MB RAM max
+          
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - ps aux | grep "bun" | grep -v grep
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -f http://api:3001/health || exit 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      
+      restartPolicy: Always
+      
+      # Pod disruption budget considerations
+      terminationGracePeriodSeconds: 30

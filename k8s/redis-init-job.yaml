@@ -17,7 +17,10 @@ spec:
           - "/app/wait-for-redis.sh redis 6379 && bun run redis-seed"
         env:
           - name: REDIS_URL
-            value: "redis://redis:6379"
+            valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_URL
       initContainers:
       - name: wait-for-redis
         image: aabhii/betteruptime-init:amd64-latest

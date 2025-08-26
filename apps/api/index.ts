@@ -85,7 +85,7 @@ app.post("/user/signup", async (req, res) => {
       res.status(400).json({ error: "Invalid input data" });
       return;
     }
-
+    
     const user = await prismaClient.user.create({
       data: {
         username: data.data.username,

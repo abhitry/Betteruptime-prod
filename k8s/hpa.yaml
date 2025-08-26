@@ -1,0 +1,143 @@
+# Horizontal Pod Autoscaler for India region workers
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: worker-india-hpa
+  namespace: betteruptime
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker-india
+  minReplicas: 1    # Minimum 1 pod always running
+  maxReplicas: 10   # Maximum 10 pods for India region
+  metrics:
+  # Scale based on CPU utilization
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # Scale up when CPU > 70%
+  
+  # Scale based on Memory utilization
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80  # Scale up when Memory > 80%
+  
+  # Scale down/up behavior configuration
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+      - type: Percent
+        value: 50    # Scale down max 50% of current replicas
+        periodSeconds: 60
+      - type: Pods
+        value: 2     # Scale down max 2 pods at a time
+        periodSeconds: 60
+      selectPolicy: Min  # Use the most conservative policy
+    
+    scaleUp:
+      stabilizationWindowSeconds: 60   # Wait 1 minute before scaling up
+      policies:
+      - type: Percent
+        value: 100   # Scale up max 100% of current replicas
+        periodSeconds: 60
+      - type: Pods
+        value: 4     # Scale up max 4 pods at a time
+        periodSeconds: 60
+      selectPolicy: Max  # Use the most aggressive policy
+
+---
+# Horizontal Pod Autoscaler for USA region workers
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: worker-usa-hpa
+  namespace: betteruptime
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker-usa
+  minReplicas: 1    # Minimum 1 pod always running
+  maxReplicas: 10   # Maximum 10 pods for USA region
+  metrics:
+  # Scale based on CPU utilization
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # Scale up when CPU > 70%
+  
+  # Scale based on Memory utilization
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80  # Scale up when Memory > 80%
+  
+  # Scale down/up behavior configuration
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+      - type: Percent
+        value: 50    # Scale down max 50% of current replicas
+        periodSeconds: 60
+      - type: Pods
+        value: 2     # Scale down max 2 pods at a time
+        periodSeconds: 60
+      selectPolicy: Min  # Use the most conservative policy
+    
+    scaleUp:
+      stabilizationWindowSeconds: 60   # Wait 1 minute before scaling up
+      policies:
+      - type: Percent
+        value: 100   # Scale up max 100% of current replicas
+        periodSeconds: 60
+      - type: Pods
+        value: 4     # Scale up max 4 pods at a time
+        periodSeconds: 60
+      selectPolicy: Max  # Use the most aggressive policy
+
+---
+# Pod Disruption Budget for India workers
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: worker-india-pdb
+  namespace: betteruptime
+spec:
+  minAvailable: 1  # Always keep at least 1 pod running
+  selector:
+    matchLabels:
+      app: worker-india
+      region: india
+
+---
+# Pod Disruption Budget for USA workers  
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: worker-usa-pdb
+  namespace: betteruptime
+spec:
+  minAvailable: 1  # Always keep at least 1 pod running
+  selector:
+    matchLabels:
+      app: worker-usa
+      region: usa
+
+
+
+
+#after insatll usa india and hpa
+#kubectl get deployment metrics-server -n kube-system
+# to install metrics server

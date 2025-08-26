@@ -18,17 +18,54 @@ spec:
           image: aabhii/betteruptime-worker:amd64-latest
           env:
             - name: DATABASE_URL
-              value: "postgres://postgres:postgres@postgres:5432/mydb"
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: DATABASE_URL
+
             - name: REDIS_URL
-              value: "redis://redis:6379"
-            - name: REGION_ID
-              value: "f5a13f6c-8e91-42b8-9c0e-07b4567a98e0"
-            - name: WORKER_ID
-              value: "1"
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_URL
+                  
+            - name: REGION_ID_USA
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REGION_ID_USA
+            - name: REGION_NAME_USA
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REGION_NAME_USA
+
+            - name: REGION_ID_INDIA
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REGION_ID_INDIA
+            - name: REGION_NAME_INDIA
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REGION_NAME_INDIA
+
             - name: POSTGRES_HOST
-              value: "postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_HOST
+
             - name: POSTGRES_USER
-              value: "postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_USER
+
             - name: POSTGRES_PASSWORD
-              value: "postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_PASSWORD
       restartPolicy: Always
