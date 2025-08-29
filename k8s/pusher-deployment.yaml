@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pusher
+  namespace: betteruptime
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pusher
+  template:
+    metadata:
+      labels:
+        app: pusher
+    spec:
+      containers:
+        - name: pusher
+          image: aabhii/betteruptime-pusher:amd64-latest
+                
+          env:
+            # Use secrets and configmaps instead of hardcoded values
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: DATABASE_URL
+
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_URL
+
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_DB
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_PASSWORD
+
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: database-secret
+                  key: POSTGRES_HOST
+
+          resources:
+            requests:
+              cpu: 50m      # 0.1 CPU cores
+              memory: 64Mi  # 128 MB RAM
+            limits:
+              cpu: 200m      # 0.5 CPU cores max
+              memory: 256Mi  # 512 MB RAM max

@@ -1,0 +1,44 @@
+# Frontend ingress - no rewrite, no regex needed
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: betteruptime-frontend-ingress
+  namespace: betteruptime
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: betteruptime.abhishek97.icu
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+
+---
+
+# API ingress - regex path + rewrite + use-regex annotation
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: betteruptime-api-ingress
+  namespace: betteruptime
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: betteruptime.abhishek97.icu
+    http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: api
+            port:
+              number: 3001
