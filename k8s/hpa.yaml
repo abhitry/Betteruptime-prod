@@ -10,7 +10,7 @@ spec:
     kind: Deployment
     name: worker-india
   minReplicas: 1    # Minimum 1 pod always running
-  maxReplicas: 10   # Maximum 10 pods for India region
+  maxReplicas: 3   # Maximum 10 pods for India region
   metrics:
   # Scale based on CPU utilization
   - type: Resource
@@ -65,7 +65,7 @@ spec:
     kind: Deployment
     name: worker-usa
   minReplicas: 1    # Minimum 1 pod always running
-  maxReplicas: 10   # Maximum 10 pods for USA region
+  maxReplicas: 3   # Maximum 10 pods for USA region
   metrics:
   # Scale based on CPU utilization
   - type: Resource

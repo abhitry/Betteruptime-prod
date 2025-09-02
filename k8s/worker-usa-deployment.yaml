@@ -75,11 +75,11 @@ spec:
           # Resource requests and limits for HPA
           resources:
             requests:
-              cpu: 50m      # 0.1 CPU cores
-              memory: 128Mi  # 128 MB RAM
+              cpu: 25m      # 0.1 CPU cores
+              memory: 64Mi  # 128 MB RAM
             limits:
-              cpu: 200m      # 0.5 CPU cores max
-              memory: 256Mi  # 512 MB RAM max
+              cpu: 100m      # 0.5 CPU cores max
+              memory: 128Mi  # 512 MB RAM max
           
 
           livenessProbe:

@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-terminated-pods
+  namespace: betteruptime
+spec:
+  schedule: "*/10 * * * *"  # every 10 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl
+              command:
+                - /bin/sh
+                - -c
+                - kubectl delete pod -n betteruptime --field-selector=status.phase=Succeeded
+          restartPolicy: OnFailure
