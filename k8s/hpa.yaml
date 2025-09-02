@@ -10,7 +10,7 @@ spec:
     kind: Deployment
     name: worker-india
   minReplicas: 1    # Minimum 1 pod always running
-  maxReplicas: 3   # Maximum 10 pods for India region
+  maxReplicas: 2   # Maximum 2 pods for India region
   metrics:
   # Scale based on CPU utilization
   - type: Resource
@@ -18,7 +18,7 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70  # Scale up when CPU > 70%
+        averageUtilization: 80  # Scale up when CPU > 80%
   
   # Scale based on Memory utilization
   - type: Resource
@@ -26,7 +26,7 @@ spec:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 80  # Scale up when Memory > 80%
+        averageUtilization: 85  # Scale up when Memory > 85%
   
   # Scale down/up behavior configuration
   behavior:
@@ -65,7 +65,7 @@ spec:
     kind: Deployment
     name: worker-usa
   minReplicas: 1    # Minimum 1 pod always running
-  maxReplicas: 3   # Maximum 10 pods for USA region
+  maxReplicas: 2   # Maximum 2 pods for USA region
   metrics:
   # Scale based on CPU utilization
   - type: Resource
@@ -73,7 +73,7 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70  # Scale up when CPU > 70%
+        averageUtilization: 80  # Scale up when CPU > 80%
   
   # Scale based on Memory utilization
   - type: Resource
@@ -81,7 +81,7 @@ spec:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 80  # Scale up when Memory > 80%
+        averageUtilization: 85  # Scale up when Memory > 85%
   
   # Scale down/up behavior configuration
   behavior:

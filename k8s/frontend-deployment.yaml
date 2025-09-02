@@ -4,7 +4,7 @@ metadata:
   name: frontend
   namespace: betteruptime
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -34,11 +34,11 @@ spec:
 
           resources:
             requests:
-              cpu: 50m
+              cpu: 25m
               memory: 64Mi
             limits:
-              cpu: 200m
-              memory: 256Mi
+              cpu: 100m
+              memory: 128Mi
 
           # Example (if you don’t want to use configmap and just test directly)
           # env:
