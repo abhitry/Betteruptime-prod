@@ -8,8 +8,8 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/mydb
     ports:
       - "5432:5432"
-    # volumes:
-    #   - postgres_data:/var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
       interval: 5s
@@ -20,8 +20,8 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    # volumes:
-    #   - redis_data:/data
+    volumes:
+      - redis_data:/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -141,3 +141,9 @@ services:
 # volumes:
 #   postgres_data:
 #   redis_data:
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
