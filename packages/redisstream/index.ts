@@ -1,8 +1,8 @@
 import { createClient } from "redis";
 
 const STREAM_NAME = "betteruptime:website";
-//const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
-const REDIS_URL ="redis://192.168.0.103:6379";
+const REDIS_URL = process.env.REDIS_URL || "redis://redis:6379";
+//const REDIS_URL ="redis://192.168.0.103:6379";
 let client: any = null;
 
 async function getClient() {

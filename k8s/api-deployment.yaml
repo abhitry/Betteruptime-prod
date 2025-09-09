@@ -15,16 +15,16 @@ spec:
     spec:
       initContainers:
         - name: wait-for-postgres
-          image: aabhii/betteruptime-init:amd64-latest
+          image: aabhii/betteruptime-init:amd64-v2
           command: ["/app/wait-for-postgres.sh", "postgres", "5432", "postgres"]
 
         - name: wait-for-redis
-          image: aabhii/betteruptime-init:amd64-latest
+          image: aabhii/betteruptime-init:amd64-v2
           command: ["/app/wait-for-redis.sh", "redis", "6379"]
 
       containers:
         - name: api
-          image: aabhii/betteruptime-backend:amd64-latest
+          image: aabhii/betteruptime-backend:amd64-v2
           ports:
             - containerPort: 3001
 

@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: worker-india
-          image: aabhii/betteruptime-worker:v2-svc-api
+          image: aabhii/betteruptime-worker:amd64-v2
           env:
             # Database configuration from secrets
             - name: DATABASE_URL

@@ -9,12 +9,12 @@ spec:
       restartPolicy: OnFailure
       initContainers:
         - name: wait-for-postgres
-          image: aabhii/betteruptime-init:amd64-latest
+          image: aabhii/betteruptime-init:amd64-v2
           command: ["/app/wait-for-postgres.sh", "postgres", "5432", "postgres"]
 
       containers:
         - name: postgres-init
-          image: aabhii/betteruptime-init:amd64-latest
+          image: aabhii/betteruptime-init:amd64-v2
           env:
             - name: DATABASE_URL
               valueFrom:

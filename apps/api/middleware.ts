@@ -5,7 +5,7 @@ export function authmiddleware(req:Request,res:Response,next:NextFunction)
 {
     const header=req.headers.authorization!;
     try{
-        let data=jwt.verify(header ,"secret")//process.env.JWT_SECRET! 
+        let data=jwt.verify(header ,process.env.JWT_SECRET!)
         req.userId=data.sub as string;
         next();
     }catch(e)

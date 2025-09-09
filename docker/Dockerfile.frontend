@@ -28,10 +28,10 @@ WORKDIR /app/apps/frontend
 
 # Set environment variables
 ENV NODE_ENV=production
-#ENV NEXT_PUBLIC_BACKEND_URL=http://34.60.134.87:3000
-#ENV NEXT_PUBLIC_BACKEND_URL=https://betteruptime.abhishek97.icu/api
+#ENV NEXT_PUBLIC_BACKEND_URL=http://34.60.134.87:3001
+ENV NEXT_PUBLIC_BACKEND_URL=https://betteruptime.abhishek97.icu/api
 #for gke just unduw the comment and u r good to go  and in frontend/lib file as well
-ENV NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+#ENV NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
 ENV PORT=3000
 
 # Build the application

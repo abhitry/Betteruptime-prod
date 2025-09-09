@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: aabhii/betteruptime-frontend:v3-nginx-ingress
+          image: aabhii/betteruptime-frontend:amd64-v3
           imagePullPolicy: Always 
           ports:
             - containerPort: 3000

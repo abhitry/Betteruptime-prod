@@ -12,7 +12,7 @@ kubectl apply -f k8s/namespace.yaml
 # Step 2: Apply secrets and configuration
 echo "2️⃣ Applying secrets and configuration..."
 kubectl apply -f k8s/secrets.yaml
-kubectl apply -f k8s/configmaps.yaml
+kubectl apply -f k8s/configmaps.yamlkubectl rollout restart deployment frontend -n betteruptime
 
 # Step 3: Apply storage classes (optional but recommended)
 echo "3️⃣ Creating storage classes..."

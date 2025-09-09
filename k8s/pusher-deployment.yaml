@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: pusher
-          image: aabhii/betteruptime-pusher:amd64-latest
+          image: aabhii/betteruptime-pusher:amd64-v2
                 
           env:
             # Use secrets and configmaps instead of hardcoded values

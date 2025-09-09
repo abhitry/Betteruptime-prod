@@ -9,7 +9,7 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: redis-init
-        image: aabhii/betteruptime-init:amd64-latest
+        image: aabhii/betteruptime-init:amd64-v2
         workingDir: /app/packages/store
         command:
           - sh
@@ -23,5 +23,5 @@ spec:
                   key: REDIS_URL
       initContainers:
       - name: wait-for-redis
-        image: aabhii/betteruptime-init:amd64-latest
+        image: aabhii/betteruptime-init:amd64-v2
         command: ["/app/wait-for-redis.sh", "redis", "6379"]

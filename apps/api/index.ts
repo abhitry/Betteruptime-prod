@@ -126,8 +126,8 @@ app.post("/user/signin", async (req, res) => {
     const token = jwt.sign(
       {
         sub: user.id,
-      },"secret"
-      //process.env.JWT_SECRET!
+      },process.env.JWT_SECRET!
+      
     );
 
     res.json({
