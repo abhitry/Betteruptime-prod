@@ -19,7 +19,7 @@ export interface NewWebsite {
 
 export interface WebsiteTick {
   id: string;
-  responseTimeMs: number;
+  response_time_ms: number;
   status: 'Up' | 'Down' | 'Unknown';
   regionId: string;
   websiteId: string;

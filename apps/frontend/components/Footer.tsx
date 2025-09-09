@@ -3,7 +3,7 @@ import { Monitor, Twitter, Github, Linkedin, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 dark:bg-black text-white">
+    <footer id="footer" className="bg-gray-900 dark:bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
@@ -16,18 +16,30 @@ const Footer = () => {
               Get instant alerts and detailed analytics.
             </p>
             <div className="flex space-x-4">
-              <Twitter className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
-              <Github className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
-              <Linkedin className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
-              <Mail className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
+              <a href="https://x.com/ABHISHEKMASNE97" target="_blank" rel="noopener noreferrer">
+                <Twitter className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
+              </a>
+              <a href="https://github.com/abhitry" target="_blank" rel="noopener noreferrer">
+                <Github className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
+              </a>
+              <a href="https://www.linkedin.com/in/abhishek-masne-68b685232/" target="_blank" rel="noopener noreferrer">
+                <Linkedin className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
+              </a>
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=abhishekmasne2015@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Mail className="h-6 w-6 text-gray-400 dark:text-gray-300 hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer transition-colors" />
+              </a>
             </div>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Product</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Features</a></li>
-              <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Pricing</a></li>
+              <li><a href="#features" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Features</a></li>
+              <li><a href="#pricing" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Pricing</a></li>
               <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">API</a></li>
               <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Integrations</a></li>
               <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Status Page</a></li>
@@ -37,7 +49,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Company</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">About Us</a></li>
+              <li><a href="#footer" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">About Us</a></li>
               <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Blog</a></li>
               <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Careers</a></li>
               <li><a href="#" className="text-gray-400 dark:text-gray-300 hover:text-white transition-colors">Press</a></li>

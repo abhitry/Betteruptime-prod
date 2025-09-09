@@ -5,27 +5,28 @@ import { useRouter } from 'next/navigation';
 
 interface WebsiteTableProps {
   websites: Website[];
+  lastRefresh: Date | null;  // 🔥 NEW
 }
 
 
-export function WebsiteTable({ websites }: WebsiteTableProps) {
+export function WebsiteTable({ websites, lastRefresh }: WebsiteTableProps) {
   const router=useRouter();
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) {
-      return 'Just now';
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } else {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `${days} day${days > 1 ? 's' : ''} ago`;
-    }
+  const formatTimeAgo = (lastChecked: string | Date, lastRefresh: Date | null) => {
+    if (!lastChecked || !lastRefresh) return "Never";
+
+    const lastCheckedDate = new Date(lastChecked);
+    const diffMs = lastRefresh.getTime() - lastCheckedDate.getTime(); // 🔥 difference based on lastRefresh
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+    if (diffSeconds < 60) return `${diffSeconds} second${diffSeconds !== 1 ? 's' : ''} ago`; 
+    if (diffMinutes < 60) return rtf.format(-diffMinutes, "minute");
+    if (diffHours < 24) return rtf.format(-diffHours, "hour");
+    return rtf.format(-diffDays, "day");
   };
 
   const getStatusBadge = (status: Website['status']) => {
@@ -105,7 +106,7 @@ export function WebsiteTable({ websites }: WebsiteTableProps) {
                     {website.status === 'checking' ? (
                       <span className="text-amber-400">Checking...</span>
                     ) : (
-                      formatTimeAgo(new Date(website.lastChecked))
+                      formatTimeAgo(website.lastChecked, lastRefresh)
                     )}
                   </div>
                 </td>
@@ -115,7 +116,7 @@ export function WebsiteTable({ websites }: WebsiteTableProps) {
                     <button onClick={()=>{
                       router.push(`/website/${website.id}`)
                     }}
-                      className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                      className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors cursor-pointer"
                       title="View Details"
                     >
                       <ExternalLink className="w-4 h-4" />

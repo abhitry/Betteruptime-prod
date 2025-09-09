@@ -126,8 +126,8 @@ app.post("/user/signin", async (req, res) => {
     const token = jwt.sign(
       {
         sub: user.id,
-      },
-      process.env.JWT_SECRET!
+      },"secret"
+      //process.env.JWT_SECRET!
     );
 
     res.json({
@@ -167,6 +167,6 @@ app.get("/websites", authmiddleware, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+app.listen(PORT,"0.0.0.0", () => {
   console.log(`API server running on port ${PORT}`);
 });

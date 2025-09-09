@@ -34,15 +34,27 @@ const SignIn: React.FC<SignInProps> = ({ onSwitchToSignUp }) => {
     catch(e)
     {
         setIsLoading(false);
+        if (axios.isAxiosError(e)) {
+        if (e.response?.status === 401) {
+            alert("Invalid username or password. Please try again.");
+        } else if (e.response?.status === 400) {
+            alert("Please check your input.");
+        } else {
+            alert("Something went wrong. Please try again later.");
+          }
+        } else {
+          alert("Unexpected error occurred.");
+        }
     }
+
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex flex-col md:flex-row">
       {/* Left side - Marketing content */}
-      <div className="w-1/2 p-12 text-white flex flex-col">
+      <div className="w-full md:w-1/2 p-6 sm:p-12 text-white flex flex-col">
         <div className="mb-8">
-          <button className="flex items-center text-white/80 hover:text-white transition-colors mb-8">
+          <button onClick={() => router.push("/")} className="flex items-center text-white/80 hover:text-white transition-colors mb-8 cursor-pointer">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </button>
@@ -56,14 +68,10 @@ const SignIn: React.FC<SignInProps> = ({ onSwitchToSignUp }) => {
         </div>
 
         <div className="flex-1 flex flex-col  max-w-lg">
-          {/* Decorative icons */}
-          <div className="flex space-x-6 mb-3">
-            
-          </div>
 
-          <h2 className="text-4xl font-bold mb-6">Welcome back to UpGuard</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6">Welcome back to UpGuard</h2>
           
-          <p className="text-white/80 text-lg mb-12 leading-relaxed">
+          <p className="text-white/80 text-base sm:text-lg mb-12 leading-relaxed">
             Monitor your infrastructure with confidence. Get instant alerts, 
             beautiful status pages, and comprehensive uptime monitoring.
           </p>
@@ -107,10 +115,10 @@ const SignIn: React.FC<SignInProps> = ({ onSwitchToSignUp }) => {
       </div>
 
       {/* Right side - Sign in form */}
-      <div className="w-1/2 bg-gray-900 flex items-center justify-center p-12">
+      <div className="w-full md:w-1/2 bg-gray-900 flex items-center justify-center p-6 sm:p-12">
         <div className="max-w-md w-full">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Sign in to your account</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Sign in to your account</h2>
             <p className="text-gray-400">Enter your credentials to access your dashboard</p>
           </div>
 
@@ -175,7 +183,7 @@ const SignIn: React.FC<SignInProps> = ({ onSwitchToSignUp }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
@@ -188,7 +196,7 @@ const SignIn: React.FC<SignInProps> = ({ onSwitchToSignUp }) => {
                 onClick={()=>{
                   router.push("/signup" )
                 }}
-                className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                className="text-blue-400 hover:text-blue-300 font-medium transition-colors cursor-pointer"
               >
                 Sign up
               </button>

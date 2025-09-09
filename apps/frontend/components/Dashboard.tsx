@@ -6,7 +6,8 @@ import { StatsCards } from './StatsCard';
 import { AddWebsiteModal } from './AddWebsiteModel'; 
 import { BACKEND_URL } from '@/lib/utils';
 import axios from 'axios';
-
+import { useRouter } from "next/navigation"; // Next.js 13+ (app router)
+import { LogOut } from "lucide-react";
 
 // Mock data
 const mockWebsites: Website[] = [
@@ -18,6 +19,9 @@ export function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'up' | 'down' | 'checking'>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [cooldown, setCooldown] = useState(0);  // 🔥 NEW
+  const router = useRouter();
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const stats: DashboardStats = {
     totalSites: websites.length,
@@ -31,7 +35,7 @@ export function Dashboard() {
     return matchesSearch && matchesFilter;
   });
 
-  const handleAddWebsite = (newWebsite: { url: string }) => {
+  const handleAddWebsite =async (newWebsite: { url: string }) => {
     const website: Website = {
       id: Date.now().toString(),
       url:newWebsite.url,
@@ -39,15 +43,17 @@ export function Dashboard() {
       responseTime:0,
       lastChecked:'Checking ...',
     };
-    axios.post(`${BACKEND_URL}/website`,{
+    setWebsites([...websites, website]);
+    setIsAddModalOpen(false);
+    await axios.post(`${BACKEND_URL}/website`,{
         url:newWebsite.url
     },{
         headers:{
             Authorization:localStorage.getItem("token")
         }
     })
-    setWebsites([...websites, website]);
-    setIsAddModalOpen(false);
+
+    await fetchData();
   };
 
 
@@ -66,18 +72,36 @@ export function Dashboard() {
             responseTime: w.ticks[0] ? w.ticks[0].response_time_ms : 0,
             lastChecked: w.ticks[0] ? w.ticks[0].createdAt : new Date().toLocaleString()
         })))
+        setLastRefresh(new Date());
     }
 
     useEffect(() => {
+      // Fetch immediately
+      fetchData();
+
+      // Set up interval to fetch data every 5 seconds
+      const interval = setInterval(() => {
         fetchData();
+      }, 60000); // 60000ms = 60 seconds
+
+      // Clean up interval on component unmount
+      return () => clearInterval(interval);
     }, []);
 
+    // 🔥 NEW: cooldown timer effect
+    useEffect(() => {
+      if (cooldown > 0) {
+        const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+        return () => clearTimeout(timer);
+      }
+    }, [cooldown]);
+
+        // 🔥 UPDATED: handleRefresh with cooldown
     const handleRefresh = async () => {
-    //setIsRefreshing(true);
-    // Simulate refresh
-    await fetchData();
-    //setIsRefreshing(false);
+      await fetchData();
+      setCooldown(20); // start 20s cooldown
     };
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
@@ -85,28 +109,22 @@ export function Dashboard() {
       <div className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Globe className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl font-bold text-white">UpGuard</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-white">BetterUptime</h1>
               </div>
-              <nav className="hidden md:flex space-x-6">
-                <a href="#" className="text-white font-medium px-3 py-2 rounded-md bg-slate-700">Dashboard</a>
-                <a href="#" className="text-slate-300 hover:text-white px-3 py-2 rounded-md hover:bg-slate-700">Status Pages</a>
-                <a href="#" className="text-slate-300 hover:text-white px-3 py-2 rounded-md hover:bg-slate-700">Reports</a>
-              </nav>
             </div>
-            <div className="flex items-center space-x-4">
-              <button className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-md">
-                <Search className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-md">
-                <Globe className="w-5 h-5" />
-              </button>
-              <button className="px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-md">
-                Account
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token"); // clear token
+                  router.push("/signin"); // redirect to login page
+                }}
+                className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base bg-white-600 sm:bg-transparent text-white rounded-md cursor-pointer transition-colors flex items-center justify-center hover:bg-red-500/10 sm:hover:bg-white/10"title="Logout">
+                <LogOut className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -136,7 +154,7 @@ export function Dashboard() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="pl-10 pr-8 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                className={`pl-10 pr-8 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none  `}
               >
                 <option value="all">All Status</option>
                 <option value="up">Up</option>
@@ -147,16 +165,23 @@ export function Dashboard() {
           </div>
           
           <div className="flex gap-3">
+              {/* 🔥 UPDATED Refresh Button */}
             <button
               onClick={handleRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-white transition-colors"
+              disabled={cooldown > 0}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border ${
+                cooldown > 0
+                  ? 'bg-gray-500 cursor-not-allowed border-gray-600 text-gray-300'
+                  : 'bg-slate-700 hover:bg-slate-600 border-slate-600 text-white cursor-pointer'
+              }`}
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              {cooldown > 0 ? `Wait ${cooldown}s` : 'Refresh'}
             </button>
+           
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Add Website
@@ -165,7 +190,7 @@ export function Dashboard() {
         </div>
 
         {/* Websites Table */}
-        <WebsiteTable websites={filteredWebsites} />
+        <WebsiteTable websites={filteredWebsites} lastRefresh={lastRefresh} />
       </div>
 
       {/* Add Website Modal */}

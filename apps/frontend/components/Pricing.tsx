@@ -1,7 +1,10 @@
+"use client"
 import React from 'react';
 import { Check, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const Pricing = () => {
+  const router=useRouter();
   const plans = [
     {
       name: 'Starter',
@@ -100,8 +103,10 @@ const Pricing = () => {
                 ))}
               </ul>
 
-              <button 
-                className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
+              <button   onClick={()=>{
+                  router.push("/signup" )
+                }} 
+                className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-2  cursor-pointer ${
                   plan.popular
                     ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500'
@@ -118,7 +123,10 @@ const Pricing = () => {
           <p className="text-gray-600 mb-4">
             Need a custom solution? We offer enterprise plans with dedicated support.
           </p>
-          <button className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700 dark:hover:text-blue-300 underline">
+          <button onClick={() => {
+            const footer = document.getElementById("footer");
+            footer?.scrollIntoView({ behavior: "smooth" }); // 🔥 Smooth scroll to footer
+            }} className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700 dark:hover:text-blue-300 underline cursor-pointer">
             Contact Sales Team
           </button>
         </div>

@@ -87,6 +87,7 @@ async function fetchWebsite(url: string, websiteId: string): Promise<void> {
 
 async function recordResult(websiteId: string, responseTime: number, status: "Up" | "Down") {
   try {
+    console.log("Worker started at:", new Date().toISOString());
     await prismaClient.websiteTick.create({
       data: {
         response_time_ms: responseTime,
@@ -95,6 +96,7 @@ async function recordResult(websiteId: string, responseTime: number, status: "Up
         website_id: websiteId,
       },
     });
+    console.log("Tick inserted at:", new Date().toISOString());
   } catch (error) {
     console.error(`Error recording result for website ${websiteId}:`, error);
   }
