@@ -352,6 +352,266 @@ GRANT app_writer TO api_service;
 - **Health Checks**: Kubernetes readiness/liveness probes
 - **Custom Metrics**: Application-specific monitoring
 
+## High Concurrency & Race Condition Handling
+
+### 34. **You have 6 worker pods (3 India + 3 USA) all trying to insert WebsiteTick records simultaneously. How do you handle atomicity and avoid conflicts?**
+
+**Answer:** This is a critical concurrency scenario I've handled in my BetterUptime project:
+
+#### **1. Database-Level Atomicity (PostgreSQL ACID)**
+```sql
+-- Each INSERT is atomic by default in PostgreSQL
+INSERT INTO "WebsiteTick" (
+  id, response_time_ms, status, region_id, website_id, createdAt
+) VALUES (
+  gen_random_uuid(), 150, 'Up', 'region-id', 'website-id', NOW()
+);
+```
+
+#### **2. No Primary Key Conflicts (UUID Strategy)**
+```typescript
+// Using UUID prevents primary key conflicts
+model WebsiteTick {
+  id              String    @id @default(uuid())  // ✅ Unique across all pods
+  response_time_ms Int
+  status          WebsiteStatus
+  region_id       String
+  website_id      String
+  createdAt       DateTime  @default(now())
+}
+```
+
+#### **3. Connection Pool Management**
+```typescript
+// Prisma handles connection pooling automatically
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+})
+
+// Each worker gets connections from the pool
+await prisma.websiteTick.create({
+  data: {
+    response_time_ms: responseTime,
+    status: status,
+    region_id: REGION_ID,
+    website_id: websiteId,
+  }
+})
+```
+
+#### **4. Regional Separation Strategy**
+```typescript
+// Each region has unique REGION_ID - no conflicts
+// India workers: REGION_ID = "32c9087b-7c53-4d84-8b63-32517cbd17c3"
+// USA workers:   REGION_ID = "f5a13f6c-8e91-42b8-9c0e-07b4567a98e0"
+
+// Different workers, different regions = natural separation
+const REGION_ID = process.env.REGION_ID!;
+const WORKER_ID = process.env.WORKER_ID!; // Unique per pod
+```
+
+#### **5. Redis Streams for Work Distribution**
+```typescript
+// Each worker reads from same stream but different consumer groups
+await xReadGroup(REGION_ID, WORKER_ID, [
+  { key: 'betteruptime:website', id: '>' }
+], { COUNT: 10, BLOCK: 5000 });
+
+// Redis ensures each message is delivered to only ONE worker in the group
+// No duplicate processing = no duplicate database entries
+```
+
+#### **6. Kubernetes Pod Naming for Unique Worker IDs**
+```yaml
+# In worker deployment
+env:
+  - name: WORKER_ID
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name  # Each pod gets unique name
+  - name: REGION_ID
+    valueFrom:
+      configMapKeyRef:
+        name: app-config
+        key: REGION_ID_INDIA  # or REGION_ID_USA
+```
+
+### 35. **What if two workers from the same region try to process the same website simultaneously?**
+
+**Answer:** This is prevented by Redis Streams consumer group mechanism:
+
+```typescript
+// Redis Consumer Groups ensure exactly-once delivery
+// When worker-1 reads a message, it's marked as "pending" for that worker
+// Other workers in the same group won't see it
+
+const response = await xReadGroup('india-region', 'worker-1', [
+  { key: 'betteruptime:website', id: '>' }
+]);
+
+// After processing, acknowledge the message
+await xAckBulk('india-region', messageIds);
+```
+
+**Flow:**
+1. **Pusher** adds website to stream: `{url: "google.com", id: "web-123"}`
+2. **Worker-1** reads it → Message marked as "pending" for worker-1
+3. **Worker-2** reads stream → Gets different message or waits
+4. **Worker-1** processes → Inserts to DB → Acknowledges message
+5. **No conflicts** because each message processed by exactly one worker
+
+### 36. **How do you handle database connection exhaustion with multiple workers?**
+
+**Answer:**
+
+#### **Connection Pool Configuration**
+```typescript
+// Prisma connection pooling
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: "postgresql://user:pass@host:5432/db?connection_limit=5"
+    }
+  }
+})
+```
+
+#### **Resource Limits in Kubernetes**
+```yaml
+# Limit resources per worker pod
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+```
+
+#### **PostgreSQL Configuration**
+```sql
+-- Increase max connections if needed
+ALTER SYSTEM SET max_connections = 200;
+SELECT pg_reload_conf();
+
+-- Monitor active connections
+SELECT count(*) FROM pg_stat_activity;
+```
+
+### 37. **What happens if a worker pod crashes while processing?**
+
+**Answer:**
+
+#### **Redis Streams Reliability**
+```typescript
+// If worker crashes before ACK, message stays in "pending" state
+// Another worker can claim it using XCLAIM or XAUTOCLAIM
+
+// Check pending messages
+const pending = await client.xPending('betteruptime:website', 'india-region');
+
+// Claim abandoned messages (older than 60 seconds)
+const claimed = await client.xAutoClaim(
+  'betteruptime:website', 
+  'india-region', 
+  'worker-2', 
+  60000, // 60 seconds
+  '0-0'
+);
+```
+
+#### **Kubernetes Restart Policy**
+```yaml
+spec:
+  template:
+    spec:
+      restartPolicy: Always  # Pod automatically restarts
+      containers:
+        - name: worker
+          # ... worker config
+```
+
+#### **Database Transaction Safety**
+```typescript
+// Each insert is atomic - either completes or fails
+// No partial data corruption
+try {
+  await prisma.websiteTick.create({ data: tickData });
+  await xAck(REGION_ID, messageId); // Only ACK after successful DB insert
+} catch (error) {
+  // Don't ACK - message will be retried
+  console.error('Failed to insert tick:', error);
+}
+```
+
+### 38. **How would you scale this to handle 10,000 websites with 100 worker pods?**
+
+**Answer:**
+
+#### **Database Scaling**
+```sql
+-- Partition WebsiteTicks table by time
+CREATE TABLE websitetick_2024_01 PARTITION OF websitetick
+FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+
+-- Index optimization
+CREATE INDEX CONCURRENTLY idx_websitetick_website_time 
+ON websitetick (website_id, createdat DESC);
+```
+
+#### **Connection Pool Scaling**
+```typescript
+// Use external connection pooler
+// DATABASE_URL with PgBouncer
+const DATABASE_URL = "postgresql://user:pass@pgbouncer:5432/db?pool_timeout=10&pool_size=25";
+```
+
+#### **Redis Streams Scaling**
+```typescript
+// Multiple streams for load distribution
+const streamName = `betteruptime:website:${websiteId % 10}`;
+
+// Each worker group handles subset of streams
+const streams = [
+  'betteruptime:website:0',
+  'betteruptime:website:1',
+  // ... up to 9
+];
+```
+
+#### **Horizontal Pod Autoscaling**
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: worker-hpa
+spec:
+  minReplicas: 10
+  maxReplicas: 100
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+## **Key Points to Emphasize in Interview:**
+
+1. **"I've designed the system to handle concurrency from day one"**
+2. **"Used UUID primary keys to eliminate conflicts"**
+3. **"Redis Streams provide exactly-once delivery guarantees"**
+4. **"PostgreSQL ACID properties ensure data consistency"**
+5. **"Kubernetes provides automatic recovery and scaling"**
+6. **"Connection pooling prevents resource exhaustion"**
+7. **"Regional separation reduces contention"**
+8. **"Monitoring and alerting catch issues early"**
+
 ## Best Practices Summary
 
 ### Database Design
