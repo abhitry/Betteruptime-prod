@@ -612,6 +612,208 @@ spec:
 7. **"Regional separation reduces contention"**
 8. **"Monitoring and alerting catch issues early"**
 
+## Frontend Architecture & Database Integration Questions
+
+### 39. **What frontend technology did you use and why?**
+
+**Answer:** We used **Next.js 15** (React framework) for several strategic reasons:
+
+#### **Technology Choice:**
+```json
+// package.json shows Next.js setup
+{
+  "name": "frontend",
+  "dependencies": {
+    "next": "15.4.7",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
+}
+```
+
+#### **Why Next.js over Plain React:**
+1. **Server-Side Rendering (SSR)**: Better SEO for marketing pages
+2. **App Router**: Modern routing with layouts and nested routes
+3. **API Integration**: Built-in fetch optimization
+4. **Production Ready**: Automatic code splitting and optimization
+5. **TypeScript Support**: Full type safety with our backend APIs
+
+#### **Database Integration Pattern:**
+```typescript
+// Frontend communicates with backend API, not directly with DB
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 
+  "https://betteruptime.abhishek97.icu/api";
+
+// Authentication flow
+const response = await axios.post(`${BACKEND_URL}/user/signin`, {
+  username, password
+});
+localStorage.setItem("token", response.data.jwt);
+
+// Protected API calls
+const websites = await axios.get(`${BACKEND_URL}/websites`, {
+  headers: { Authorization: localStorage.getItem("token") }
+});
+```
+
+### 40. **How does your frontend handle real-time data updates?**
+
+**Answer:** We implemented a **polling-based approach** with smart refresh strategies:
+
+#### **Auto-refresh Implementation:**
+```typescript
+useEffect(() => {
+  // Initial fetch
+  fetchData();
+  
+  // Auto-refresh every 60 seconds
+  const interval = setInterval(() => {
+    fetchData();
+  }, 60000);
+  
+  return () => clearInterval(interval);
+}, []);
+```
+
+#### **User-Controlled Refresh with Cooldown:**
+```typescript
+const [cooldown, setCooldown] = useState(0);
+
+const handleRefresh = async () => {
+  await fetchData();
+  setCooldown(20); // 20-second cooldown to prevent spam
+};
+```
+
+#### **Why Not WebSockets:**
+- **Simpler Architecture**: Less complexity for monitoring data
+- **Better for Scaling**: No persistent connections to manage
+- **Kubernetes Friendly**: Stateless pods, easier load balancing
+- **Cost Effective**: No need for WebSocket infrastructure
+
+### 41. **How do you handle authentication and authorization in the frontend?**
+
+**Answer:** We implemented **JWT-based authentication** with secure token management:
+
+#### **Authentication Flow:**
+```typescript
+// Login process
+const handleSubmit = async (e) => {
+  const response = await axios.post(`${BACKEND_URL}/user/signin`, {
+    username, password
+  });
+  
+  // Store JWT in localStorage
+  localStorage.setItem("token", response.data.jwt);
+  router.push("/dashboard");
+};
+
+// Protected route middleware
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    router.push("/signin");
+  }
+}, []);
+```
+
+#### **API Request Authorization:**
+```typescript
+// All API calls include JWT token
+const config = {
+  headers: {
+    Authorization: localStorage.getItem("token")
+  }
+};
+
+const websites = await axios.get(`${BACKEND_URL}/websites`, config);
+```
+
+#### **Security Considerations:**
+- **Token Expiration**: Backend validates JWT on every request
+- **Automatic Logout**: Redirect to login on 401 responses
+- **HTTPS Only**: All API communication encrypted
+- **No Sensitive Data**: Frontend only stores JWT, not user data
+
+### 42. **How does your frontend architecture support the database monitoring workflow?**
+
+**Answer:** The frontend is designed around the **monitoring data lifecycle**:
+
+#### **Dashboard Architecture:**
+```typescript
+// Real-time stats calculation
+const stats: DashboardStats = {
+  totalSites: websites.length,
+  sitesUp: websites.filter(w => w.status === 'up').length,
+  sitesDown: websites.filter(w => w.status === 'down').length,
+};
+
+// Website status mapping from database
+setWebsites(response.data.websites.map((w: any) => ({
+  id: w.id,
+  url: w.url,
+  status: w.ticks[0] ? (w.ticks[0].status === "Up" ? "up" : "down") : "checking",
+  responseTime: w.ticks[0] ? w.ticks[0].response_time_ms : 0,
+  lastChecked: w.ticks[0] ? w.ticks[0].createdAt : new Date().toLocaleString()
+})));
+```
+
+#### **Data Flow:**
+1. **Workers** → Insert WebsiteTicks to **PostgreSQL**
+2. **API** → Aggregates data with Prisma queries
+3. **Frontend** → Displays real-time status and metrics
+4. **User** → Adds new websites → **Redis Streams** → **Workers**
+
+#### **Performance Optimizations:**
+- **Efficient Queries**: Backend joins Website + latest WebsiteTick
+- **Client-Side Caching**: Avoid unnecessary re-renders
+- **Pagination Ready**: Table structure supports large datasets
+- **Responsive Design**: Works on mobile for on-call monitoring
+
+### 43. **How would you scale the frontend for thousands of concurrent users?**
+
+**Answer:** 
+
+#### **Current Architecture Strengths:**
+- **Stateless**: No server-side sessions, scales horizontally
+- **CDN Ready**: Static assets can be cached globally
+- **API Separation**: Frontend and backend scale independently
+
+#### **Scaling Strategies:**
+```yaml
+# Kubernetes horizontal scaling
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 5  # Scale based on traffic
+  template:
+    spec:
+      containers:
+      - name: frontend
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+```
+
+#### **Performance Improvements:**
+- **Next.js Optimizations**: Automatic code splitting, image optimization
+- **Caching Strategy**: Redis for frequently accessed data
+- **Database Optimization**: Read replicas for dashboard queries
+- **Real-time Updates**: Consider WebSockets for high-frequency users
+
+## **Frontend-Database Integration Best Practices:**
+
+1. **Never Direct DB Access**: Always through API layer
+2. **JWT Authentication**: Secure, stateless, scalable
+3. **Error Handling**: Graceful degradation on API failures
+4. **Real-time Feel**: Smart polling + user-controlled refresh
+5. **Type Safety**: TypeScript interfaces match database schema
+6. **Responsive Design**: Mobile-first for monitoring alerts
+7. **Performance**: Efficient queries, client-side optimization
+
 ## Best Practices Summary
 
 ### Database Design
